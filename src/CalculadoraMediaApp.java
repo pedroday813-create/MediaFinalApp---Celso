@@ -1,18 +1,21 @@
-import javax.swing.*; // Importa a biblioteca Swing para criar a interface gráfica
-import java.awt.*; // Importa a biblioteca AWT para layouts e eventos
-import java.awt.event.ActionEvent; // Importa a classe para eventos de ação (cliques de botão)
-import java.awt.event.ActionListener; // Importa a interface para "ouvir" os eventos de ação
+import javax.swing.*;
+import javax.swing.border.EmptyBorder; // Para adicionar espaçamento (padding)
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
 /**
  * Esta classe cria uma janela (JFrame) para calcular a média de um aluno.
- * Ela implementa ActionListener para poder reagir aos cliques dos botões.
+ * A interface foi reorganizada usando BorderLayout e JPanels para melhor estrutura.
+ * O cálculo da média agora utiliza um vetor.
  */
 public class CalculadoraMediaApp extends JFrame implements ActionListener {
 
     // --- Componentes da Interface Gráfica ---
     // Campos de texto para entrada de dados
     private JTextField txtNome;
-    private JTextField txtNota1, txtNota2, txtNota3, txtNota4;
+    // Agora temos os campos de nota como um vetor para facilitar o acesso
+    private JTextField[] txtNotas;
 
     // Botões de ação
     private JButton btnCalcular, btnLimpar, btnSair;
@@ -22,142 +25,145 @@ public class CalculadoraMediaApp extends JFrame implements ActionListener {
     private JLabel lblResultadoMedia;
     private JLabel lblResultadoSituacao;
 
+    // Número de notas a serem inseridas
+    private static final int NUMERO_DE_NOTAS = 4;
+
     /**
      * Construtor da classe.
      * Configura a janela principal e inicializa todos os componentes.
      */
     public CalculadoraMediaApp() {
         // --- 1. Configuração da Janela Principal ---
-        setTitle("Calculadora de Média Simples");
-        setSize(350, 450); // Define o tamanho da janela (largura, altura)
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE); // Faz o programa fechar ao clicar no "X"
-        setLocationRelativeTo(null); // Centraliza a janela na tela
-        setLayout(new GridLayout(10, 2, 10, 10)); // Define o layout (linhas, colunas, espaçamento h, espaçamento v)
+        setTitle("Calculadora de Média Escolar");
+        setSize(400, 400); // Ajuste no tamanho
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setLocationRelativeTo(null);
 
-        // --- 2. Inicialização e Adição dos Componentes ---
+        // Usando BorderLayout como layout principal da janela
+        setLayout(new BorderLayout(10, 10)); // Espaçamento horizontal e vertical
+
+        // Painel principal que conterá tudo, com uma borda de espaçamento
+        JPanel pnlPrincipal = new JPanel(new BorderLayout(10, 10));
+        pnlPrincipal.setBorder(new EmptyBorder(10, 10, 10, 10)); // Padding (top, left, bottom, right)
+        add(pnlPrincipal, BorderLayout.CENTER);
+
+
+        // --- 2. Painel de Entradas (CENTER) ---
+        JPanel pnlEntradas = new JPanel(new GridLayout(NUMERO_DE_NOTAS + 1, 2, 5, 5)); // +1 para o nome
+        pnlPrincipal.add(pnlEntradas, BorderLayout.CENTER);
 
         // Campo Nome
-        add(new JLabel("Nome do Aluno:"));
+        pnlEntradas.add(new JLabel("Nome do Aluno:"));
         txtNome = new JTextField();
-        add(txtNome);
+        pnlEntradas.add(txtNome);
 
-        // Campo Nota 1
-        add(new JLabel("Nota 1:"));
-        txtNota1 = new JTextField();
-        add(txtNota1);
+        // Inicializa o vetor de campos de texto
+        txtNotas = new JTextField[NUMERO_DE_NOTAS];
 
-        // Campo Nota 2
-        add(new JLabel("Nota 2:"));
-        txtNota2 = new JTextField();
-        add(txtNota2);
+        // Cria os campos de nota dinamicamente
+        for (int i = 0; i < NUMERO_DE_NOTAS; i++) {
+            pnlEntradas.add(new JLabel("Nota " + (i + 1) + ":"));
+            txtNotas[i] = new JTextField();
+            pnlEntradas.add(txtNotas[i]);
+        }
 
-        // Campo Nota 3
-        add(new JLabel("Nota 3:"));
-        txtNota3 = new JTextField();
-        add(txtNota3);
+        // --- 3. Painel de Botoes (SOUTH do pnlPrincipal) ---
+        JPanel pnlBotoes = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 5));
 
-        // Campo Nota 4
-        add(new JLabel("Nota 4:"));
-        txtNota4 = new JTextField();
-        add(txtNota4);
-
-        // Botão Calcular
         btnCalcular = new JButton("Calcular Média");
-        btnCalcular.addActionListener(this); // Registra o "ouvinte" de clique
-        add(btnCalcular);
+        btnCalcular.addActionListener(this);
+        pnlBotoes.add(btnCalcular);
 
-        // Botão Limpar
         btnLimpar = new JButton("Limpar");
-        btnLimpar.addActionListener(this); // Registra o "ouvinte" de clique
-        add(btnLimpar);
+        btnLimpar.addActionListener(this);
+        pnlBotoes.add(btnLimpar);
 
-        // Botão Sair
         btnSair = new JButton("Sair");
-        btnSair.addActionListener(this); // Registra o "ouvinte" de clique
-        add(btnSair);
+        btnSair.addActionListener(this);
+        pnlBotoes.add(btnSair);
 
-        // Espaço vazio (apenas para layout)
-        add(new JLabel());
+        pnlPrincipal.add(pnlBotoes, BorderLayout.NORTH); // Botoes ficam acima dos resultados
 
-        // --- 3. Área de Resultados ---
-        add(new JLabel("--- Resultados ---"));
-        add(new JLabel()); // Espaço
+
+        // --- 4. Painel de Resultados (SOUTH do pnlPrincipal) ---
+        JPanel pnlResultados = new JPanel();
+        // BoxLayout organiza os componentes verticalmente (um embaixo do outro)
+        pnlResultados.setLayout(new BoxLayout(pnlResultados, BoxLayout.Y_AXIS));
+        pnlResultados.setBorder(BorderFactory.createTitledBorder("Resultados")); // Título para a área
 
         lblResultadoNome = new JLabel("Aluno: ");
-        add(lblResultadoNome);
-        add(new JLabel()); // Espaço
-
         lblResultadoMedia = new JLabel("Média Final: ");
-        add(lblResultadoMedia);
-        add(new JLabel()); // Espaço
-
         lblResultadoSituacao = new JLabel("Situação: ");
-        add(lblResultadoSituacao);
-        add(new JLabel()); // Espaço
+
+        // Adiciona os labels ao painel de resultados
+        pnlResultados.add(lblResultadoNome);
+        pnlResultados.add(Box.createRigidArea(new Dimension(0, 5))); // Espaçamento
+        pnlResultados.add(lblResultadoMedia);
+        pnlResultados.add(Box.createRigidArea(new Dimension(0, 5))); // Espaçamento
+        pnlResultados.add(lblResultadoSituacao);
+
+        pnlPrincipal.add(pnlResultados, BorderLayout.SOUTH);
     }
 
     /**
      * Este método é chamado automaticamente quando um botão é clicado.
-     * (Porque implementamos ActionListener e registramos com addActionListener).
      */
     @Override
     public void actionPerformed(ActionEvent e) {
-        // Verifica qual botão foi clicado
         Object source = e.getSource();
 
         if (source == btnSair) {
-            // Se for o botão Sair, fecha a aplicação
             System.exit(0);
 
         } else if (source == btnLimpar) {
-            // Se for o botão Limpar, apaga o texto de todos os campos
+            // Limpa o nome
             txtNome.setText("");
-            txtNota1.setText("");
-            txtNota2.setText("");
-            txtNota3.setText("");
-            txtNota4.setText("");
+            // Limpa todos os campos de nota usando o vetor
+            for (int i = 0; i < NUMERO_DE_NOTAS; i++) {
+                txtNotas[i].setText("");
+            }
+
+            // Limpa os resultados
             lblResultadoNome.setText("Aluno: ");
             lblResultadoMedia.setText("Média Final: ");
             lblResultadoSituacao.setText("Situação: ");
 
         } else if (source == btnCalcular) {
-            // Se for o botão Calcular, executa a lógica da média
             try {
-                // 1. Obter os dados dos campos de texto
+                // 1. Obter nome
                 String nome = txtNome.getText();
-                double n1 = Double.parseDouble(txtNota1.getText());
-                double n2 = Double.parseDouble(txtNota2.getText());
-                double n3 = Double.parseDouble(txtNota3.getText());
-                double n4 = Double.parseDouble(txtNota4.getText());
 
-                // 2. Calcular a média
-                double media = (n1 + n2 + n3 + n4) / 4.0;
+                // 2. Criar e preencher o vetor de notas
+                double[] notas = new double[NUMERO_DE_NOTAS];
+                for (int i = 0; i < NUMERO_DE_NOTAS; i++) {
+                    notas[i] = Double.parseDouble(txtNotas[i].getText());
+                }
 
-                // 3. Determinar a situação
+                // 3. Calcular a média usando o vetor
+                double media = calcularMedia(notas);
+
+                // 4. Determinar a situação
                 String situacao;
                 if (media < 6.0) {
                     situacao = "Ruim";
-                } else if (media >= 6.0 && media <= 7.0) {
+                } else if (media <= 7.0) { // Não precisa do >= 6.0, já foi filtrado
                     situacao = "Mais ou menos";
                 } else { // media > 7.0
                     situacao = "Muito bom";
                 }
 
-                // 4. Exibir os resultados nos rótulos (labels)
+                // 5. Exibir os resultados
                 lblResultadoNome.setText("Aluno: " + nome);
-                // String.format("%.2f", media) formata a média para ter 2 casas decimais
                 lblResultadoMedia.setText("Média Final: " + String.format("%.2f", media));
                 lblResultadoSituacao.setText("Situação: " + situacao);
 
             } catch (NumberFormatException ex) {
-                // Se o usuário digitar algo que não é um número (ex: "abc")
                 JOptionPane.showMessageDialog(this,
                         "Erro: Por favor, insira apenas números válidos nas notas.",
                         "Erro de Entrada",
                         JOptionPane.ERROR_MESSAGE);
                 lblResultadoSituacao.setText("Situação: Erro!");
             } catch (Exception ex) {
-                // Captura outros erros inesperados
                 JOptionPane.showMessageDialog(this,
                         "Ocorreu um erro inesperado.",
                         "Erro",
@@ -167,12 +173,30 @@ public class CalculadoraMediaApp extends JFrame implements ActionListener {
     }
 
     /**
+     * Método auxiliar para calcular a média de um vetor de notas.
+     * @param notas O vetor de notas.
+     * @return A média aritmética das notas.
+     */
+    private double calcularMedia(double[] notas) {
+        if (notas == null || notas.length == 0) {
+            return 0.0;
+        }
+
+        double soma = 0.0;
+        // Loop "for-each" para somar todos os elementos do vetor
+        for (double nota : notas) {
+            soma += nota;
+        }
+
+        return soma / notas.length;
+    }
+
+
+    /**
      * Método principal (main) que inicia a aplicação.
      */
     public static void main(String[] args) {
-        // Cria e exibe a janela da aplicação
-        // SwingUtilities.invokeLater garante que a interface gráfica
-        // seja criada na thread correta (Event Dispatch Thread).
+        // Garante que a interface gráfica seja criada na thread correta
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
